@@ -3,6 +3,10 @@ import numpy as np
 import joblib
 import logging
 import time
+
+import io
+import pandas as pd
+
 from telegram import InputFile
 from math import log
 from skimage.feature import local_binary_pattern
@@ -19,7 +23,7 @@ from telegram.ext import (
 # CONFIGURACIÓN
 # ==============================
 
-TOKEN = "8231393607:AAHA8FvLmEZTKeO1C-ILRVkpyEwvtYuWuRc"
+TOKEN = ""
 MODEL_PATH = "fruit_classifier.pkl"
 
 # ==============================
@@ -81,6 +85,9 @@ def segment_fruit_grabcut(img):
 
     final_mask = np.zeros_like(mask2)
     cv2.drawContours(final_mask, [contour], -1, 255, -1)
+
+    segmented = cv2.bitwise_and(img, img, mask=mask)
+    cv2.imwrite("segmented.jpg", segmented)
 
     return final_mask, contour
 
@@ -162,91 +169,33 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # MANEJADOR DE IMÁGENES
 # ==============================
 
-#async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
-#
-#    # Descargar imagen
-#    photo = update.message.photo[-1]
-#    file = await photo.get_file()
-#    await file.download_to_drive("input.jpg")
-#
-#    # Leer imagen
-#    img = cv2.imread("input.jpg")
-#
-#    # Extraer características
-#    features = extract_features(img)
-#
-#    # Predicción
-#    prediction = model.predict(features)
-#
-#    # Responder
-#    await update.message.reply_text(f"🍏 Predicción: {prediction[0]}")
-#
-
 async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
-
-    start_time = time.time()
 
     # Descargar imagen
     photo = update.message.photo[-1]
     file = await photo.get_file()
     await file.download_to_drive("input.jpg")
 
+    # Leer imagen
     img = cv2.imread("input.jpg")
 
-    # Segmentación
-    mask, contour = segment_fruit_grabcut(img)
-
-    if mask is None:
-        await update.message.reply_text("❌ No se pudo segmentar la fruta.")
-        return
-
-    # Guardar imagen segmentada
-    segmented = cv2.bitwise_and(img, img, mask=mask)
-    cv2.imwrite("segmented.jpg", segmented)
-
-    # Extraer features
+    # Extraer características
     features = extract_features(img)
-
-    if features is None:
-        await update.message.reply_text("❌ Error en extracción de características.")
-        return
 
     # Predicción
     prediction = model.predict(features)
+    probabilities = model.predict_proba(features)
 
-    # Probabilidades (si el modelo lo soporta)
-    if hasattr(model, "predict_proba"):
-        probs = model.predict_proba(features)
-        confidence = np.max(probs) * 100
-    else:
-        confidence = None
+    # Responder
+    await update.message.reply_text(f"🍏 Predicción: {prediction[0]}")
 
-    end_time = time.time()
-    inference_time = (end_time - start_time) * 1000  # ms
+    print("\nPredicción:", prediction[0])
 
-    # Logging profesional
-    logging.info(
-        f"Usuario: {update.effective_user.username} | "
-        f"Predicción: {prediction} | "
-        f"Tiempo: {inference_time:.2f} ms"
-    )
+    print("\nProbabilidades:")
+    for fruit, prob in zip(model.classes_, probabilities[0]):
+        print(f"{fruit}: {prob:.4f}")
 
-    # Enviar imagen segmentada
-    await update.message.reply_photo(
-        photo=InputFile("segmented.jpg"),
-        caption=f"🍏 Predicción: {prediction}"
-    )
 
-    # Enviar métricas
-    if confidence:
-        await update.message.reply_text(
-            f"📊 Confianza: {confidence:.2f}%\n"
-            f"⏱ Tiempo de inferencia: {inference_time:.2f} ms"
-        )
-    else:
-        await update.message.reply_text(
-            f"⏱ Tiempo de inferencia: {inference_time:.2f} ms"
-        )
 
 
 
