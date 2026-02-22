@@ -23,7 +23,7 @@ from telegram.ext import (
 # CONFIGURACIÓN
 # ==============================
 
-TOKEN = ""
+TOKEN = "8231393607:AAFkvr3_nWw4Lh9x5dD3KpKRHcdE2lnFB3Y"
 MODEL_PATH = "fruit_classifier.pkl"
 
 # ==============================
@@ -43,8 +43,42 @@ model = joblib.load(MODEL_PATH)
 print("✅ Modelo cargado correctamente")
 
 # ==========================================================
-# SEGMENTACIÓN (usar la robusta)
+# SEGMENTACIÓN
 # ==========================================================
+
+def segment_fruit(img):
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+    # Blur para reducir ruido
+    blur = cv2.GaussianBlur(gray, (5,5), 0)
+
+    # Otsu
+    _, thresh = cv2.threshold(
+        blur, 0, 255,
+        cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU
+    )
+
+    # Operaciones morfológicas
+    kernel = np.ones((5,5), np.uint8)
+    thresh = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, kernel)
+
+    contours, _ = cv2.findContours(
+        thresh, cv2.RETR_EXTERNAL,
+        cv2.CHAIN_APPROX_SIMPLE
+    )
+
+    if not contours:
+        return None, None
+
+    contour = max(contours, key=cv2.contourArea)
+
+    mask = np.zeros_like(gray)
+    cv2.drawContours(mask, [contour], -1, 255, -1)
+
+    segmented = cv2.bitwise_and(img, img, mask=mask)
+    cv2.imwrite("segmented.jpg", segmented)
+
+    return mask, contour
 
 def segment_fruit_grabcut(img):
 
@@ -98,7 +132,7 @@ def segment_fruit_grabcut(img):
 
 def extract_features(img):
 
-    mask, contour = segment_fruit_grabcut(img)
+    mask, contour = segment_fruit(img)
 
     if mask is None:
         return None

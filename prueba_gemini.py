@@ -52,6 +52,11 @@ def extraer_caracteristicas(imagen_path):
     
     # Devolvemos un vector de características: [Color(H), Forma(Circ), Tamaño(Area)]
     features = [hue_promedio, circularidad, area]
+
+    segmented = cv2.bitwise_and(img, img, mask=mask)
+    cv2.imwrite("segmented.jpg", segmented)
+
+
     return features
 
 # --- FASE 2: ENTRENAMIENTO DE LA IA (Simulación) ---
@@ -84,7 +89,7 @@ mi_ia = entrenar_modelo()
 print("IA Entrenada y lista para separar frutas 🍎🍐🍊")
 
 # 2. Simular el análisis de una imagen nueva (Pon aquí la ruta de tu foto)
-imagen_prueba = "oran.jpg" 
+imagen_prueba = "apl.jpg" 
 datos_leidos_camara = extraer_caracteristicas(imagen_prueba)
 
 # Como no tengo tu foto, voy a inventar unos datos que leería la cámara:
