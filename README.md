@@ -49,3 +49,4 @@ A continuación se detalla la función de cada script incluido en este repositor
 
 ---
 *Desarrollado como parte del proyecto de Máquina Separadora de Frutas.*
+
