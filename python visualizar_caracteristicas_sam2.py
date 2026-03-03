@@ -20,7 +20,7 @@ from sam2.automatic_mask_generator import SAM2AutomaticMaskGenerator
 CHECKPOINT = "checkpoints/sam2_hiera_large.pt"   # Ruta al modelo
 CONFIG = "sam2_hiera_l.yaml"                      # Archivo de configuración
 DEVICE = "cpu"                                     # o "cuda" si tienes GPU
-IMAGE_PATH = "tu_imagen.jpg"                       # Imagen a analizar
+IMAGE_PATH = "apl.jpg"                       # Imagen a analizar
 ENERGY_THRESHOLD = 0.99                            # 99% de energía para Fourier
 OUTPUT_DIR = "resultados_fourier"                  # Carpeta donde se guardan las imágenes
 
