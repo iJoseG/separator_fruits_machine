@@ -23,7 +23,7 @@ from telegram.ext import (
 # CONFIGURACIÓN
 # ==============================
 
-TOKEN = "8231393607:AAFkvr3_nWw4Lh9x5dD3KpKRHcdE2lnFB3Y"
+TOKEN = ""
 MODEL_PATH = "fruit_classifier.pkl"
 
 # ==============================
